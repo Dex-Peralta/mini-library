@@ -10,10 +10,19 @@ class AuthorController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-         $authors = Author::all();
-    return view('authors.index', compact('authors'));
+        $search = trim((string) $request->query('search', ''));
+
+        $authors = Author::query()
+            ->withCount('books')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%");
+            })
+            ->orderBy('name')
+            ->get();
+
+        return view('authors.index', compact('authors'));
     }
 
     /**

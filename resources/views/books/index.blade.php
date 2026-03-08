@@ -18,16 +18,16 @@
             @endif
 
             <!-- Mini Statistics Bar -->
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2 mb-4">
                 <!-- Total Books -->
-                <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-purple-500">
+                <div class="bg-white rounded-lg shadow-sm p-3 border-l-4 border-purple-500">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 uppercase font-semibold">Total Books</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $stats['total_books'] }}</p>
+                            <p class="text-xl font-bold text-gray-900">{{ $stats['total_books'] }}</p>
                         </div>
-                        <div class="p-2 bg-purple-100 rounded-lg">
-                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="p-1.5 bg-purple-100 rounded-lg">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                             </svg>
                         </div>
@@ -35,14 +35,14 @@
                 </div>
 
                 <!-- Total Copies -->
-                <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-500">
+                <div class="bg-white rounded-lg shadow-sm p-3 border-l-4 border-blue-500">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 uppercase font-semibold">Total Copies</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $stats['total_copies'] }}</p>
+                            <p class="text-xl font-bold text-gray-900">{{ $stats['total_copies'] }}</p>
                         </div>
-                        <div class="p-2 bg-blue-100 rounded-lg">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="p-1.5 bg-blue-100 rounded-lg">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                             </svg>
                         </div>
@@ -50,14 +50,14 @@
                 </div>
 
                 <!-- Available Copies -->
-                <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
+                <div class="bg-white rounded-lg shadow-sm p-3 border-l-4 border-green-500">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 uppercase font-semibold">Available</p>
-                            <p class="text-2xl font-bold text-green-600">{{ $stats['available_copies'] }}</p>
+                            <p class="text-xl font-bold text-green-600">{{ $stats['available_copies'] }}</p>
                         </div>
-                        <div class="p-2 bg-green-100 rounded-lg">
-                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="p-1.5 bg-green-100 rounded-lg">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
@@ -65,14 +65,14 @@
                 </div>
 
                 <!-- Borrowed Copies -->
-                <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500">
+                <div class="bg-white rounded-lg shadow-sm p-3 border-l-4 border-orange-500">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 uppercase font-semibold">Borrowed</p>
-                            <p class="text-2xl font-bold text-orange-600">{{ $stats['borrowed_copies'] }}</p>
+                            <p class="text-xl font-bold text-orange-600">{{ $stats['borrowed_copies'] }}</p>
                         </div>
-                        <div class="p-2 bg-orange-100 rounded-lg">
-                            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="p-1.5 bg-orange-100 rounded-lg">
+                            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
                             </svg>
                         </div>
@@ -80,14 +80,14 @@
                 </div>
 
                 <!-- Out of Stock -->
-                <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-red-500">
+                <div class="bg-white rounded-lg shadow-sm p-3 border-l-4 border-red-500">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-gray-500 uppercase font-semibold">Out of Stock</p>
-                            <p class="text-2xl font-bold text-red-600">{{ $stats['out_of_stock'] }}</p>
+                            <p class="text-xl font-bold text-red-600">{{ $stats['out_of_stock'] }}</p>
                         </div>
-                        <div class="p-2 bg-red-100 rounded-lg">
-                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="p-1.5 bg-red-100 rounded-lg">
+                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
@@ -105,6 +105,24 @@
                             <p class="text-sm text-gray-500 mt-1">Showing {{ $books->count() }} {{ Str::plural('book', $books->count()) }}</p>
                         </div>
                     </div>
+
+                    <form method="GET" action="{{ route('books.index') }}" class="mb-6">
+                        <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+                            <input
+                                type="text"
+                                name="search"
+                                value="{{ request('search') }}"
+                                placeholder="Search by title, author, ISBN, genre, publisher, or year"
+                                class="w-full sm:max-w-2xl rounded-md border-gray-300 focus:border-gray-900 focus:ring-gray-900"
+                            >
+                            <div class="flex gap-2">
+                                <button type="submit" class="bg-gray-900 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm">Search</button>
+                                @if(request('search'))
+                                    <a href="{{ route('books.index') }}" class="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md text-sm">Clear</a>
+                                @endif
+                            </div>
+                        </div>
+                    </form>
                     
                     @if($books->count() > 0)
                         <div class="overflow-x-auto">
@@ -194,7 +212,7 @@
                         </div>
                     @else
                         <div class="text-center py-12">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="mx-auto text-gray-400" width="64" height="64" style="width: 64px; height: 64px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                             </svg>
                             <h3 class="mt-2 text-sm font-medium text-gray-900">No books</h3>

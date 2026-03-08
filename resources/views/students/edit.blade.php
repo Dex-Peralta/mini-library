@@ -22,6 +22,25 @@
                 </div>
 
                 <div>
+                    <x-input-label for="college" value="College" />
+                    <select id="college" name="college" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-900 focus:ring-slate-900" required>
+                        <option value="">Select a college</option>
+                        @foreach([
+                            'College of Public Administration and Governance',
+                            'College of Arts and Sciences',
+                            'College of Business',
+                            'College of Education',
+                            'College of Law',
+                            'College of Nursing',
+                            'College of Technologies',
+                        ] as $college)
+                            <option value="{{ $college }}" {{ old('college', $student->college) === $college ? 'selected' : '' }}>{{ $college }}</option>
+                        @endforeach
+                    </select>
+                    <x-input-error :messages="$errors->get('college')" class="mt-2" />
+                </div>
+
+                <div>
                     <x-input-label for="course" value="Course" />
                     <x-text-input id="course" name="course" type="text" class="mt-1 block w-full" :value="old('course', $student->course)" required />
                     <x-input-error :messages="$errors->get('course')" class="mt-2" />

@@ -11,9 +11,24 @@ class StudentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $students = Student::all();
+        $search = trim((string) $request->query('search', ''));
+
+        $students = Student::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('student_number', 'like', "%{$search}%")
+                        ->orWhere('college', 'like', "%{$search}%")
+                        ->orWhere('course', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('name')
+            ->get();
+
         return view('students.index', compact('students'));
     }
     /**
@@ -32,6 +47,7 @@ class StudentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string',
             'student_number' => 'required|string|unique:students',
+            'college' => 'required|string',
             'course' => 'required|string',
             'email' => 'nullable|email',
             'phone' => 'nullable|string'
@@ -69,6 +85,7 @@ class StudentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string',
             'student_number' => 'required|string|unique:students,student_number,' . $id,
+            'college' => 'required|string',
             'course' => 'required|string',
             'email' => 'nullable|email',
             'phone' => 'nullable|string'

@@ -17,6 +17,12 @@
                 </div>
             @endif
 
+            @if(session('error'))
+                <div class="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                    {{ session('error') }}
+                </div>
+            @endif
+
             <!-- Transaction Info -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
@@ -45,7 +51,11 @@
                                 })->count();
                             @endphp
                             <p class="font-medium">
-                                @if($returnedItems == $totalItems)
+                                @if($borrow->isReserved())
+                                    <span class="text-purple-600">Reserved</span>
+                                @elseif($borrow->isCancelled())
+                                    <span class="text-gray-600">Cancelled</span>
+                                @elseif($returnedItems == $totalItems)
                                     <span class="text-green-600">Returned</span>
                                 @elseif($returnedItems > 0)
                                     <span class="text-blue-600">Partially Returned</span>
@@ -60,12 +70,27 @@
                 </div>
             </div>
 
-            <!-- Borrowed Books -->
+            <!-- Transaction Books -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold">Borrowed Books</h3>
-                        @if($returnedItems < $totalItems)
+                        <h3 class="text-lg font-semibold">Transaction Books</h3>
+                        @if($borrow->isReserved())
+                            <div class="flex items-center gap-2">
+                                <form action="{{ route('borrows.confirm-claim', $borrow->id) }}" method="POST" onsubmit="return confirm('Confirm this reservation has been claimed by the student?');">
+                                    @csrf
+                                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm">
+                                        Confirm Claim
+                                    </button>
+                                </form>
+                                <form action="{{ route('borrows.cancel-reservation', $borrow->id) }}" method="POST" onsubmit="return confirm('Cancel this reservation and restore inventory?');">
+                                    @csrf
+                                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm">
+                                        Cancel Reservation
+                                    </button>
+                                </form>
+                            </div>
+                        @elseif($returnedItems < $totalItems)
                             <a href="{{ route('borrows.return', $borrow->id) }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
                                 Process Return
                             </a>
@@ -96,7 +121,15 @@
                                                 </p>
                                             @endif
                                         @else
-                                            @if(now()->copy()->startOfDay()->gt($borrow->due_date->copy()->startOfDay()))
+                                            @if($borrow->isReserved())
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                    Awaiting Claim
+                                                </span>
+                                            @elseif($borrow->isCancelled())
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
+                                                    Reservation Cancelled
+                                                </span>
+                                            @elseif(now()->copy()->startOfDay()->gt($borrow->due_date->copy()->startOfDay()))
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                                     Overdue
                                                 </span>

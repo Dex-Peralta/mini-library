@@ -21,9 +21,28 @@
                     <a href="{{ route('my-books') }}" class="text-gray-900 font-semibold border-b-2 border-gray-900 pb-1">My Books</a>
                 </div>
             </div>
-            <a href="{{ route('login') }}" class="bg-gray-900 hover:bg-gray-700 text-white px-6 py-2 rounded-md">
-                Admin Login
-            </a>
+            @auth
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('profile.edit') }}" class="border border-gray-300 hover:bg-gray-100 text-gray-900 px-4 py-2 rounded-md text-sm font-medium">
+                        Profile
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="bg-gray-900 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            @else
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('login') }}" class="border border-gray-300 hover:bg-gray-100 text-gray-900 px-4 py-2 rounded-md text-sm font-medium">
+                        Login
+                    </a>
+                    <a href="{{ route('register') }}" class="bg-gray-900 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                        Register
+                    </a>
+                </div>
+            @endauth
         </div>
     </nav>
 
@@ -68,6 +87,10 @@
 
                 @php
                     $currentBorrows = $borrows->filter(function ($borrow) {
+                        if ($borrow->isReserved()) {
+                            return false;
+                        }
+
                         return $borrow->items->contains(function ($item) {
                             return is_null($item->returned_at);
                         });
@@ -105,7 +128,11 @@
                                         <div class="border border-gray-200 rounded-lg p-4">
                                             <div class="flex items-center justify-between gap-2">
                                                 <p class="font-semibold text-gray-900">{{ $item->book->title ?? 'Unknown Book' }}</p>
-                                                @if($item->returned_at)
+                                                @if($borrow->isReserved())
+                                                    <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">Reserved</span>
+                                                @elseif($borrow->isCancelled())
+                                                    <span class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">Cancelled</span>
+                                                @elseif($item->returned_at)
                                                     <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Returned</span>
                                                 @else
                                                     <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">Active</span>
@@ -113,6 +140,11 @@
                                             </div>
                                             <p class="text-sm text-gray-600 mt-1">Borrowed: {{ \Carbon\Carbon::parse($borrow->borrow_date)->format('M d, Y') }}</p>
                                             <p class="text-sm text-gray-600">Due: {{ \Carbon\Carbon::parse($borrow->due_date)->format('M d, Y') }}</p>
+                                            @if($borrow->isReserved())
+                                                <p class="text-sm text-purple-700">Waiting for librarian claim confirmation.</p>
+                                            @elseif($borrow->isCancelled())
+                                                <p class="text-sm text-gray-600">This reservation was cancelled by the librarian.</p>
+                                            @endif
                                             @if($item->returned_at)
                                                 <p class="text-sm text-gray-600">Returned: {{ \Carbon\Carbon::parse($item->returned_at)->format('M d, Y h:i A') }}</p>
                                             @endif

@@ -63,6 +63,7 @@ class BorrowController extends Controller
         // Create borrow record
         $borrow = Borrow::create([
             'student_id' => $validated['student_id'],
+            'status' => Borrow::STATUS_RESERVED,
             'borrow_date' => $validated['borrow_date'],
             'due_date' => $validated['due_date'],
         ]);
@@ -79,7 +80,7 @@ class BorrowController extends Controller
             $book->decreaseAvailability();
         }
 
-        return redirect()->route('borrows.index')->with('success', 'Books borrowed successfully!');
+        return redirect()->route('borrows.index')->with('success', 'Reservation created. Please confirm once the student claims the book(s).');
     }
 
     /**
@@ -97,6 +98,11 @@ class BorrowController extends Controller
     public function returnForm($id)
     {
         $borrow = Borrow::with(['student', 'items.book'])->findOrFail($id);
+
+        if (!$borrow->isBorrowed()) {
+            return redirect()->route('borrows.show', $borrow->id)
+                ->with('error', 'Only claimed reservations can be returned. Confirm claim first.');
+        }
         
         $finePerDay = self::FINE_PER_DAY_PHP;
         $today = Carbon::today();
@@ -110,6 +116,11 @@ class BorrowController extends Controller
     public function processReturn(Request $request, $id)
     {
         $borrow = Borrow::findOrFail($id);
+
+        if (!$borrow->isBorrowed()) {
+            return redirect()->route('borrows.show', $borrow->id)
+                ->with('error', 'Only claimed reservations can be returned. Confirm claim first.');
+        }
         
         $validated = $request->validate([
             'items' => 'required|array|min:1',
@@ -145,6 +156,52 @@ class BorrowController extends Controller
 
         return redirect()->route('borrows.show', $borrow->id)
             ->with('success', 'Books returned successfully!');
+    }
+
+    /**
+     * Confirm that a student has claimed their reserved books.
+     */
+    public function confirmClaim($id)
+    {
+        $borrow = Borrow::with('items')->findOrFail($id);
+
+        if ($borrow->isBorrowed()) {
+            return back()->with('success', 'This transaction is already marked as borrowed.');
+        }
+
+        $borrow->update([
+            'status' => Borrow::STATUS_BORROWED,
+            'claimed_at' => now(),
+        ]);
+
+        return back()->with('success', 'Reservation confirmed. Status updated to borrowed.');
+    }
+
+    /**
+     * Cancel a reservation that has not yet been claimed.
+     */
+    public function cancelReservation($id)
+    {
+        $borrow = Borrow::with(['items.book'])->findOrFail($id);
+
+        if (!$borrow->isReserved()) {
+            return back()->with('error', 'Only reserved transactions can be cancelled.');
+        }
+
+        DB::transaction(function () use ($borrow) {
+            foreach ($borrow->items as $item) {
+                if (!$item->returned_at && $item->book) {
+                    $item->book->increaseAvailability();
+                }
+            }
+
+            $borrow->update([
+                'status' => Borrow::STATUS_CANCELLED,
+                'claimed_at' => null,
+            ]);
+        });
+
+        return back()->with('success', 'Reservation cancelled and inventory restored.');
     }
 
     /**
@@ -186,6 +243,7 @@ class BorrowController extends Controller
 
             $borrow = Borrow::create([
                 'student_id' => $student->id,
+                'status' => Borrow::STATUS_RESERVED,
                 'borrow_date' => $validated['borrow_date'],
                 'due_date' => $validated['due_date'],
             ]);
@@ -204,7 +262,7 @@ class BorrowController extends Controller
         });
 
         return response()->json([
-            'message' => 'Book borrowed successfully.',
+            'message' => 'Book reserved successfully. Please claim it with the librarian for final confirmation.',
             'student_identifier' => $identifier,
             'student_number' => $result['student_number'],
             'email' => $result['email'],
@@ -230,7 +288,8 @@ class BorrowController extends Controller
                 $activeItems = BorrowItem::with(['book.authors', 'borrow'])
                     ->whereNull('returned_at')
                     ->whereHas('borrow', function($query) use ($student) {
-                        $query->where('student_id', $student->id);
+                        $query->where('student_id', $student->id)
+                            ->where('status', Borrow::STATUS_BORROWED);
                     })
                     ->orderBy('created_at', 'desc')
                     ->get()
@@ -265,7 +324,7 @@ class BorrowController extends Controller
         foreach ($validated['items'] as $itemId) {
             $item = BorrowItem::with('borrow', 'book')->find($itemId);
             
-            if ($item && !$item->returned_at) {
+            if ($item && $item->borrow && $item->borrow->isBorrowed() && !$item->returned_at) {
                 $daysLate = $this->calculateOverdueDays($item->borrow->due_date, $returnedAt);
                 $fine = $daysLate * self::FINE_PER_DAY_PHP;
 

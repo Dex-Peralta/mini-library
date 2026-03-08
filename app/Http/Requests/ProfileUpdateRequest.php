@@ -15,6 +15,8 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
+        $studentId = optional($this->user()->student)->id;
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
@@ -24,6 +26,12 @@ class ProfileUpdateRequest extends FormRequest
                 'email',
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
+            ],
+            'student_number' => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::unique('students', 'student_number')->ignore($studentId),
             ],
         ];
     }

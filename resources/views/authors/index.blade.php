@@ -19,6 +19,23 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
+                    <form method="GET" action="{{ route('authors.index') }}" class="mb-6">
+                        <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+                            <input
+                                type="text"
+                                name="search"
+                                value="{{ request('search') }}"
+                                placeholder="Search authors by name"
+                                class="w-full sm:max-w-xl rounded-md border-gray-300 focus:border-gray-900 focus:ring-gray-900"
+                            >
+                            <div class="flex gap-2">
+                                <button type="submit" class="bg-gray-900 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm">Search</button>
+                                @if(request('search'))
+                                    <a href="{{ route('authors.index') }}" class="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md text-sm">Clear</a>
+                                @endif
+                            </div>
+                        </div>
+                    </form>
                     
                     @if($authors->count() > 0)
                         <div class="overflow-x-auto">
@@ -41,7 +58,7 @@
                                                 {{ $author->name }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $author->books->count() ?? 0 }}
+                                                {{ $author->books_count ?? 0 }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <a href="{{ route('authors.edit', $author->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>

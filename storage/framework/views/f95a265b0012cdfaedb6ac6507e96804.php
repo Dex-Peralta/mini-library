@@ -30,29 +30,71 @@
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <?php if (isset($component)) { $__componentOriginalc295f12dca9d42f28a259237a5724830 = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginalc295f12dca9d42f28a259237a5724830 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.nav-link','data' => ['href' => route('dashboard'),'active' => request()->routeIs('dashboard')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('nav-link'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('dashboard')),'active' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(request()->routeIs('dashboard'))]); ?>
-                        <?php echo e(__('Dashboard')); ?>
+                <div class="hidden sm:-my-px sm:ms-10 sm:flex sm:items-center sm:gap-16">
+                    <!-- Dashboard Button -->
+                    <a href="<?php echo e(route('dashboard')); ?>" class="inline-flex items-center px-3 pt-1 pb-1 text-sm font-medium text-gray-700 hover:text-gray-900 border-b-2 transition-all duration-200 ease-in-out hover:!border-gray-900 <?php echo e(request()->routeIs('dashboard') || request()->routeIs('admin.dashboard') || request()->routeIs('student.dashboard') ? 'border-gray-900 text-gray-900' : 'border-transparent'); ?>" style="border-bottom-style: solid;">
+                        Dashboard
+                    </a>
+                    
+                    <?php if(auth()->guard()->check()): ?>
+                        <?php if(auth()->user()->isAdmin()): ?>
+                            <!-- Manage Students Button -->
+                            <a href="<?php echo e(route('students.index')); ?>" class="inline-flex items-center px-3 pt-1 pb-1 text-sm font-medium text-gray-700 hover:text-gray-900 border-b-2 transition-all duration-200 ease-in-out hover:!border-gray-900 <?php echo e(request()->routeIs('students.*') ? 'border-gray-900 text-gray-900' : 'border-transparent'); ?>" style="border-bottom-style: solid;">
+                                Students
+                            </a>
 
-                     <?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginalc295f12dca9d42f28a259237a5724830)): ?>
-<?php $attributes = $__attributesOriginalc295f12dca9d42f28a259237a5724830; ?>
-<?php unset($__attributesOriginalc295f12dca9d42f28a259237a5724830); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginalc295f12dca9d42f28a259237a5724830)): ?>
-<?php $component = $__componentOriginalc295f12dca9d42f28a259237a5724830; ?>
-<?php unset($__componentOriginalc295f12dca9d42f28a259237a5724830); ?>
-<?php endif; ?>
+                            <!-- Books & Authors Dropdown -->
+                            <div class="relative inline-flex items-center" x-data="{ dropdownOpen: false }">
+                                <button @click="dropdownOpen = !dropdownOpen" class="inline-flex items-center px-3 pt-1 pb-1 text-sm font-medium text-gray-700 hover:text-gray-900 border-b-2 transition-all duration-200 ease-in-out hover:!border-gray-900 <?php echo e(request()->routeIs('books.*') || request()->routeIs('authors.*') ? 'border-gray-900 text-gray-900' : 'border-transparent'); ?>" style="border-bottom-style: solid;">
+                                    Catalog
+                                    <svg class="ms-2 h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': dropdownOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                                <div x-show="dropdownOpen" 
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="transform opacity-0 scale-95"
+                                     x-transition:enter-end="transform opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="transform opacity-100 scale-100"
+                                     x-transition:leave-end="transform opacity-0 scale-95"
+                                     @click.outside="dropdownOpen = false" 
+                                     class="absolute left-0 mt-1 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+                                     style="top: 100%;">
+                                    <div class="py-1">
+                                        <a href="<?php echo e(route('books.index')); ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">Manage Books</a>
+                                        <a href="<?php echo e(route('authors.index')); ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">Manage Authors</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Transactions Dropdown -->
+                            <div class="relative inline-flex items-center" x-data="{ dropdownOpen: false }">
+                                <button @click="dropdownOpen = !dropdownOpen" class="inline-flex items-center px-3 pt-1 pb-1 text-sm font-medium text-gray-700 hover:text-gray-900 border-b-2 transition-all duration-200 ease-in-out hover:!border-gray-900 <?php echo e(request()->routeIs('borrows.*') || request()->routeIs('returns.*') ? 'border-gray-900 text-gray-900' : 'border-transparent'); ?>" style="border-bottom-style: solid;">
+                                    Transactions
+                                    <svg class="ms-2 h-4 w-4 transition-transform duration-200" :class="{ 'rotate-180': dropdownOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                                <div x-show="dropdownOpen"
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="transform opacity-0 scale-95"
+                                     x-transition:enter-end="transform opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="transform opacity-100 scale-100"
+                                     x-transition:leave-end="transform opacity-0 scale-95"
+                                     @click.outside="dropdownOpen = false" 
+                                     class="absolute left-0 mt-1 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+                                     style="top: 100%;">
+                                    <div class="py-1">
+                                        <a href="<?php echo e(route('borrows.create')); ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">New Borrow</a>
+                                        <a href="<?php echo e(route('borrows.index')); ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">Borrow Transactions</a>
+                                        <a href="<?php echo e(route('returns.manage')); ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">Manage Returns</a>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -148,9 +190,14 @@
             </div>
             <?php else: ?>
                 <div class="hidden sm:flex sm:items-center sm:ms-6">
-                    <a href="<?php echo e(route('login')); ?>" class="bg-gray-900 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                        Admin Login
-                    </a>
+                    <div class="flex items-center gap-2">
+                        <a href="<?php echo e(route('login')); ?>" class="border border-gray-300 hover:bg-gray-100 text-gray-900 px-4 py-2 rounded-md text-sm font-medium">
+                            Login
+                        </a>
+                        <a href="<?php echo e(route('register')); ?>" class="bg-gray-900 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                            Register
+                        </a>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -171,14 +218,14 @@
         <div class="pt-2 pb-3 space-y-1">
             <?php if (isset($component)) { $__componentOriginald69b52d99510f1e7cd3d80070b28ca18 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginald69b52d99510f1e7cd3d80070b28ca18 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.responsive-nav-link','data' => ['href' => route('dashboard'),'active' => request()->routeIs('dashboard')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.responsive-nav-link','data' => ['href' => route('dashboard'),'active' => request()->routeIs('dashboard') || request()->routeIs('admin.dashboard') || request()->routeIs('student.dashboard')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('responsive-nav-link'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('dashboard')),'active' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(request()->routeIs('dashboard'))]); ?>
+<?php $component->withAttributes(['href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('dashboard')),'active' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(request()->routeIs('dashboard') || request()->routeIs('admin.dashboard') || request()->routeIs('student.dashboard'))]); ?>
                 <?php echo e(__('Dashboard')); ?>
 
              <?php echo $__env->renderComponent(); ?>
@@ -269,7 +316,29 @@
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('login'))]); ?>
-                        <?php echo e(__('Admin Login')); ?>
+                        <?php echo e(__('Login')); ?>
+
+                     <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginald69b52d99510f1e7cd3d80070b28ca18)): ?>
+<?php $attributes = $__attributesOriginald69b52d99510f1e7cd3d80070b28ca18; ?>
+<?php unset($__attributesOriginald69b52d99510f1e7cd3d80070b28ca18); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginald69b52d99510f1e7cd3d80070b28ca18)): ?>
+<?php $component = $__componentOriginald69b52d99510f1e7cd3d80070b28ca18; ?>
+<?php unset($__componentOriginald69b52d99510f1e7cd3d80070b28ca18); ?>
+<?php endif; ?>
+                    <?php if (isset($component)) { $__componentOriginald69b52d99510f1e7cd3d80070b28ca18 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginald69b52d99510f1e7cd3d80070b28ca18 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.responsive-nav-link','data' => ['href' => route('register')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('responsive-nav-link'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('register'))]); ?>
+                        <?php echo e(__('Register')); ?>
 
                      <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>

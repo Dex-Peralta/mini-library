@@ -42,17 +42,6 @@
                 </div>
             </div>
 
-            <div class="rounded-xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-semibold text-slate-900">Quick Actions</h3>
-                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                    <a href="{{ route('users.index') }}" class="rounded-lg border border-slate-200 px-4 py-3 hover:bg-slate-50">Manage Librarian Users</a>
-                    <a href="{{ route('students.index') }}" class="rounded-lg border border-slate-200 px-4 py-3 hover:bg-slate-50">Manage Students</a>
-                    <a href="{{ route('authors.index') }}" class="rounded-lg border border-slate-200 px-4 py-3 hover:bg-slate-50">Manage Authors</a>
-                    <a href="{{ route('books.index') }}" class="rounded-lg border border-slate-200 px-4 py-3 hover:bg-slate-50">Manage Books</a>
-                    <a href="{{ route('borrows.index') }}" class="rounded-lg border border-slate-200 px-4 py-3 hover:bg-slate-50">Borrow and Return Transactions</a>
-                    <a href="{{ route('profile.edit') }}" class="rounded-lg border border-slate-200 px-4 py-3 hover:bg-slate-50">Update My Password</a>
-                </div>
-            </div>
         </div>
     </div>
 </x-app-layout>

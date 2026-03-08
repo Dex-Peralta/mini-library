@@ -3,7 +3,7 @@
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Borrow Transactions</h2>
             <a href="{{ route('borrows.create') }}" class="bg-gray-900 hover:bg-gray-700 text-white px-4 py-2 rounded-md">
-                New Borrow
+                New Reservation
             </a>
         </div>
     </x-slot>
@@ -21,6 +21,16 @@
                 <div class="p-6">
                     
                     @if($borrows->count() > 0)
+                        <div class="mb-4">
+                            <label for="borrowTransactionsSearch" class="sr-only">Search transactions</label>
+                            <input
+                                type="text"
+                                id="borrowTransactionsSearch"
+                                placeholder="Search by ID, student name, student number, status, or date..."
+                                class="w-full sm:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+                            >
+                        </div>
+
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
@@ -43,7 +53,13 @@
                                                 return !$item->returned_at && now()->greaterThan($borrow->due_date);
                                             })->count();
                                             
-                                            if ($returnedItems == $totalItems) {
+                                            if ($borrow->isReserved()) {
+                                                $status = 'Reserved';
+                                                $statusClass = 'bg-purple-100 text-purple-800';
+                                            } elseif ($borrow->isCancelled()) {
+                                                $status = 'Cancelled';
+                                                $statusClass = 'bg-gray-200 text-gray-700';
+                                            } elseif ($returnedItems == $totalItems) {
                                                 $status = 'Returned';
                                                 $statusClass = 'bg-green-100 text-green-800';
                                             } elseif ($returnedItems > 0) {
@@ -57,7 +73,7 @@
                                                 $statusClass = 'bg-yellow-100 text-yellow-800';
                                             }
                                         @endphp
-                                        <tr class="hover:bg-gray-50">
+                                        <tr class="hover:bg-gray-50 borrow-transaction-row" data-search="{{ strtolower('#' . $borrow->id . ' ' . $borrow->student->name . ' ' . $borrow->student->student_number . ' ' . $status . ' ' . $borrow->borrow_date->format('M d, Y') . ' ' . $borrow->due_date->format('M d, Y')) }}">
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                 #{{ $borrow->id }}
                                             </td>
@@ -84,7 +100,17 @@
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <a href="{{ route('borrows.show', $borrow->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">View</a>
-                                                @if($returnedItems < $totalItems)
+                                                @if($borrow->isReserved())
+                                                    <form action="{{ route('borrows.confirm-claim', $borrow->id) }}" method="POST" class="inline" onsubmit="return confirm('Confirm this reservation has been claimed by the student?');">
+                                                        @csrf
+                                                        <button type="submit" class="text-purple-600 hover:text-purple-900 mr-3">Confirm Claim</button>
+                                                    </form>
+                                                    <form action="{{ route('borrows.cancel-reservation', $borrow->id) }}" method="POST" class="inline" onsubmit="return confirm('Cancel this reservation and restore inventory?');">
+                                                        @csrf
+                                                        <button type="submit" class="text-red-600 hover:text-red-900 mr-3">Cancel Reservation</button>
+                                                    </form>
+                                                @endif
+                                                @if($borrow->isBorrowed() && $returnedItems < $totalItems)
                                                     <a href="{{ route('borrows.return', $borrow->id) }}" class="text-green-600 hover:text-green-900">Return</a>
                                                 @endif
                                             </td>
@@ -93,16 +119,18 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        <p id="borrowTransactionsNoResults" class="hidden mt-4 text-sm text-gray-500">No transactions match your search.</p>
                     @else
                         <div class="text-center py-12">
                             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                             </svg>
                             <h3 class="mt-2 text-sm font-medium text-gray-900">No transactions</h3>
-                            <p class="mt-1 text-sm text-gray-500">Get started by creating a new borrow transaction.</p>
+                            <p class="mt-1 text-sm text-gray-500">Get started by creating a new reservation.</p>
                             <div class="mt-6">
                                 <a href="{{ route('borrows.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-700">
-                                    New Borrow
+                                    New Reservation
                                 </a>
                             </div>
                         </div>
@@ -112,4 +140,38 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (function () {
+            const searchInput = document.getElementById('borrowTransactionsSearch');
+            const rows = document.querySelectorAll('.borrow-transaction-row');
+            const noResults = document.getElementById('borrowTransactionsNoResults');
+
+            if (!searchInput || rows.length === 0) {
+                return;
+            }
+
+            const applyFilter = () => {
+                const query = searchInput.value.trim().toLowerCase();
+                let visibleRows = 0;
+
+                rows.forEach((row) => {
+                    const searchableText = row.dataset.search || '';
+                    const shouldShow = query === '' || searchableText.includes(query);
+
+                    row.classList.toggle('hidden', !shouldShow);
+
+                    if (shouldShow) {
+                        visibleRows += 1;
+                    }
+                });
+
+                if (noResults) {
+                    noResults.classList.toggle('hidden', visibleRows > 0);
+                }
+            };
+
+            searchInput.addEventListener('input', applyFilter);
+        })();
+    </script>
 </x-app-layout>

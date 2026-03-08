@@ -11,9 +11,26 @@ class BookController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $books = Book::with('authors')->get();
+        $search = trim((string) $request->query('search', ''));
+
+        $books = Book::query()
+            ->with('authors')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('title', 'like', "%{$search}%")
+                        ->orWhere('isbn', 'like', "%{$search}%")
+                        ->orWhere('genre', 'like', "%{$search}%")
+                        ->orWhere('publisher', 'like', "%{$search}%")
+                        ->orWhere('year_published', 'like', "%{$search}%")
+                        ->orWhereHas('authors', function ($authorQuery) use ($search) {
+                            $authorQuery->where('name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->orderBy('title')
+            ->get();
         
         // Calculate statistics
         $stats = [
@@ -143,5 +160,33 @@ class BookController extends Controller
             'success' => true,
             'books' => $books
         ]);
+    }
+
+    /**
+     * Toggle favorite for a book (requires authentication and non-admin user)
+     */
+    public function toggleFavorite(Request $request, Book $book)
+    {
+        // Require authentication
+        if (!auth()->check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $user = auth()->user();
+
+        // Only students (non-admin) can favorite
+        if ($user->isAdmin()) {
+            return response()->json(['message' => 'Only students can favorite books'], 403);
+        }
+
+        $favorite = $user->favorites()->where('book_id', $book->id)->first();
+
+        if ($favorite) {
+            $favorite->delete();
+            return response()->json(['favorited' => false, 'message' => 'Removed from favorites']);
+        } else {
+            $user->favorites()->create(['book_id' => $book->id]);
+            return response()->json(['favorited' => true, 'message' => 'Added to favorites']);
+        }
     }
 }
