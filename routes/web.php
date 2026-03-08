@@ -19,6 +19,7 @@ Route::get('/dashboard', function () {
     return view('dashboard', compact('books'));
 })->name('dashboard');
 
+Route::get('/my-books', [BorrowController::class, 'myBooks'])->name('my-books');
 Route::get('/borrow', [BorrowController::class, 'index'])->name('borrow.index');
 
 // Protected routes - authentication required
@@ -31,6 +32,12 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('students', StudentController::class);
     Route::resource('authors', AuthorController::class);
     Route::resource('books', BookController::class);
+
+    // Borrow/Checkout routes
+    Route::post('/books/{book}/checkout', [BorrowController::class, 'checkout'])->name('books.checkout');
+    
+    // API routes
+    Route::get('/api/student-info', [StudentController::class, 'getStudentInfo']);
 });
 
 require __DIR__.'/auth.php';

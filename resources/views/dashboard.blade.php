@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Mini Library</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -43,7 +44,7 @@
             <!-- Navigation Links -->
             <div class="hidden md:flex items-center space-x-8">
                 <a href="{{ route('dashboard') }}" class="text-gray-900 font-medium border-b-2 border-gray-900 pb-1">Browse</a>
-                <a href="#" class="text-gray-600 hover:text-gray-900 transition">My Books</a>
+                <a href="{{ route('my-books') }}" class="text-gray-600 hover:text-gray-900 transition">My Books</a>
                 @auth
                 <a href="#" class="text-gray-600 hover:text-gray-900 transition">Admin</a>
                 @endauth
@@ -76,6 +77,21 @@
 
 <!-- Main Content -->
 <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+    
+    <!-- Student Profile Alert -->
+    @auth
+        @if(!Auth::user() || !\App\Models\Student::where('user_id', Auth::id())->exists())
+        <div class="mb-8 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+            <div>
+                <p class="text-red-700 font-medium">Student record not found. Please complete your student profile first.</p>
+                <p class="text-red-600 text-sm mt-1">You need to fill in your student information to check out books.</p>
+            </div>
+            <a href="{{ route('students.create') }}" class="ml-4 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition whitespace-nowrap">
+                Complete Profile
+            </a>
+        </div>
+        @endif
+    @endauth
     
     <!-- Header Section -->
     <div class="mb-8">
@@ -136,9 +152,15 @@
                     >
                     
                     <!-- Availability Badge -->
-                    <span class="absolute top-3 right-3 bg-green-500 text-white text-xs font-medium px-3 py-1 rounded-full shadow">
-                        Available
-                    </span>
+                    @if($book->isAvailable())
+                        <span class="absolute top-3 right-3 bg-green-500 text-white text-xs font-medium px-3 py-1 rounded-full shadow">
+                            Available
+                        </span>
+                    @else
+                        <span class="absolute top-3 right-3 bg-red-500 text-white text-xs font-medium px-3 py-1 rounded-full shadow">
+                            Out of Stock
+                        </span>
+                    @endif
                 </div>
 
                 <!-- Book Info -->
@@ -165,10 +187,38 @@
                     </p>
                     @endif
 
-                    <!-- Check Out Button -->
-                    <button class="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 rounded-lg transition duration-200 shadow-sm">
-                        Check Out
-                    </button>
+                    <!-- Status and Check Out Button -->
+                    <div class="mb-2 flex items-center justify-between">
+                        <span class="text-xs font-medium text-gray-600">
+                            Status: 
+                            <span class="status-text {{ $book->isAvailable() ? 'text-green-600' : 'text-red-600' }}">
+                                {{ $book->getStatus() }}
+                            </span>
+                        </span>
+                    </div>
+
+                    @if($book->isAvailable())
+                        @auth
+                        <button 
+                            class="w-full checkout-btn-modal bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 rounded-lg transition duration-200 shadow-sm" 
+                            data-book-id="{{ $book->id }}"
+                            data-book-title="{{ $book->title }}"
+                        >
+                            Check Out
+                        </button>
+                        @else
+                        <a href="{{ route('login') }}" class="w-full block text-center bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 rounded-lg transition duration-200 shadow-sm">
+                            Check Out
+                        </a>
+                        @endauth
+                    @else
+                        <button 
+                            class="w-full bg-gray-300 text-gray-600 font-medium py-2.5 rounded-lg cursor-not-allowed opacity-75" 
+                            disabled
+                        >
+                            Not Available
+                        </button>
+                    @endif
                 </div>
 
             </div>
@@ -176,6 +226,89 @@
         </div>
     @endif
 
+</div>
+
+<!-- Checkout Modal -->
+<div id="checkoutModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-lg max-w-md w-full">
+        <!-- Modal Header -->
+        <div class="bg-gray-900 text-white p-6 rounded-t-xl">
+            <h2 class="text-2xl font-bold">Check Out Book</h2>
+            <p id="modalBookTitle" class="text-gray-300 text-sm mt-1">Loading...</p>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 space-y-4">
+            <!-- Name -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                <input 
+                    type="text" 
+                    id="checkoutName" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50" 
+                    readonly
+                >
+            </div>
+
+            <!-- Year -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                <input 
+                    type="text" 
+                    id="checkoutYear" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50" 
+                    readonly
+                >
+            </div>
+
+            <!-- Course -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Course</label>
+                <input 
+                    type="text" 
+                    id="checkoutCourse" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50" 
+                    readonly
+                >
+            </div>
+
+            <!-- Borrow Date -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Borrow Date</label>
+                <input 
+                    type="date" 
+                    id="checkoutBorrowDate" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800"
+                >
+            </div>
+
+            <!-- Return Date -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Return Date</label>
+                <input 
+                    type="date" 
+                    id="checkoutReturnDate" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800"
+                >
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 px-6 py-4 flex gap-3 rounded-b-xl">
+            <button 
+                id="cancelCheckoutBtn" 
+                class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium py-2 rounded-lg transition"
+            >
+                Cancel
+            </button>
+            <button 
+                id="confirmCheckoutBtn" 
+                class="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium py-2 rounded-lg transition"
+            >
+                Confirm
+            </button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -238,9 +371,177 @@
         }
     }
 
-    // Add event listeners
+    // Add event listeners for search and filter
     searchInput.addEventListener('input', filterBooks);
     genreFilter.addEventListener('change', filterBooks);
+
+    // Checkout Modal Functionality
+    const checkoutModal = document.getElementById('checkoutModal');
+    const cancelCheckoutBtn = document.getElementById('cancelCheckoutBtn');
+    const confirmCheckoutBtn = document.getElementById('confirmCheckoutBtn');
+    let currentCheckoutBookId = null;
+    let studentData = null;
+
+    // Fetch student data on page load
+    async function fetchStudentData() {
+        try {
+            const response = await fetch('/api/student-info', {
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                studentData = data.data;
+            }
+        } catch (error) {
+            console.error('Error fetching student data:', error);
+        }
+    }
+
+    // Open modal when checkout button is clicked
+    document.querySelectorAll('.checkout-btn-modal').forEach(button => {
+        button.addEventListener('click', function() {
+            currentCheckoutBookId = this.getAttribute('data-book-id');
+            const bookTitle = this.getAttribute('data-book-title');
+            
+            // Set modal data
+            document.getElementById('modalBookTitle').textContent = bookTitle;
+            
+            if (studentData) {
+                document.getElementById('checkoutName').value = studentData.name || '';
+                document.getElementById('checkoutYear').value = studentData.year || '';
+                document.getElementById('checkoutCourse').value = studentData.course || '';
+            }
+            
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            const returnDate = new Date();
+            returnDate.setDate(returnDate.getDate() + 7);
+            const returnDateStr = returnDate.toISOString().split('T')[0];
+            
+            document.getElementById('checkoutBorrowDate').value = today;
+            document.getElementById('checkoutReturnDate').value = returnDateStr;
+            
+            // Show modal
+            checkoutModal.classList.remove('hidden');
+        });
+    });
+
+    // Cancel button
+    cancelCheckoutBtn.addEventListener('click', function() {
+        checkoutModal.classList.add('hidden');
+        currentCheckoutBookId = null;
+    });
+
+    // Close modal when clicking outside
+    checkoutModal.addEventListener('click', function(e) {
+        if (e.target === checkoutModal) {
+            checkoutModal.classList.add('hidden');
+            currentCheckoutBookId = null;
+        }
+    });
+
+    // Confirm checkout
+    confirmCheckoutBtn.addEventListener('click', async function() {
+        if (!currentCheckoutBookId) return;
+
+        const borrowDate = document.getElementById('checkoutBorrowDate').value;
+        const returnDate = document.getElementById('checkoutReturnDate').value;
+
+        if (!borrowDate || !returnDate) {
+            showNotification('Please fill in all fields', 'error');
+            return;
+        }
+
+        try {
+            this.disabled = true;
+            this.textContent = 'Processing...';
+            
+            const response = await fetch(`/books/${currentCheckoutBookId}/checkout`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                },
+                body: JSON.stringify({
+                    borrow_date: borrowDate,
+                    return_date: returnDate
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const bookCard = document.querySelector(`[data-book-id="${currentCheckoutBookId}"]`).closest('.book-card');
+                const bookTitle = document.querySelector(`[data-book-id="${currentCheckoutBookId}"]`).getAttribute('data-book-title');
+                
+                showNotification(`${bookTitle} added to "My Books"!`, 'success');
+                
+                // Update the button and status
+                const statusText = bookCard.querySelector('.status-text');
+                const badge = bookCard.querySelector('.absolute.top-3.right-3');
+                
+                statusText.textContent = 'Out of Stock';
+                statusText.className = 'status-text text-red-600';
+                
+                if (badge) {
+                    badge.textContent = 'Out of Stock';
+                    badge.className = 'absolute top-3 right-3 bg-red-500 text-white text-xs font-medium px-3 py-1 rounded-full shadow';
+                }
+                
+                bookCard.querySelector('.checkout-btn-modal').textContent = 'Not Available';
+                bookCard.querySelector('.checkout-btn-modal').className = 'w-full bg-gray-300 text-gray-600 font-medium py-2.5 rounded-lg cursor-not-allowed opacity-75';
+                bookCard.querySelector('.checkout-btn-modal').disabled = true;
+                
+                checkoutModal.classList.add('hidden');
+                currentCheckoutBookId = null;
+            } else {
+                showNotification(data.message || 'Failed to checkout book', 'error');
+            }
+        } catch (error) {
+            showNotification('An error occurred while checking out the book', 'error');
+        } finally {
+            confirmCheckoutBtn.disabled = false;
+            confirmCheckoutBtn.textContent = 'Confirm';
+        }
+    });
+
+    // Notification Helper
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-medium shadow-lg z-50 ${
+            type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+        }`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'fadeOut 0.3s ease-out forwards';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    // Add fadeOut animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Fetch student data on page load
+    if (document.querySelector('meta[name="csrf-token"]')) {
+        fetchStudentData();
+    }
 </script>
 
 </body>

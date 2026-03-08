@@ -9,8 +9,16 @@ class Student extends Model
     protected $fillable = [
         'name',
         'student_number',
-        'course'
+        'course',
+        'user_id',
+        'email',
+        'phone'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function borrows()
     {

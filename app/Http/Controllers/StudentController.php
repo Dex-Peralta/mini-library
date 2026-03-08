@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Student;
+use Illuminate\Support\Facades\Auth;
 
 class StudentController extends Controller
 {
@@ -26,16 +27,28 @@ class StudentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-        public function store(Request $request)
-        {
-            Student::create([
-                'name' => $request->name,
-                'student_number' => $request->student_number,
-                'course' => $request->course
-            ]);
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'student_number' => 'required|string|unique:students',
+            'course' => 'required|string',
+            'email' => 'nullable|email',
+            'phone' => 'nullable|string'
+        ]);
 
-            return redirect('/students');
-        }
+        Student::create([
+            'user_id' => Auth::id(),
+            'name' => $validated['name'],
+            'student_number' => $validated['student_number'],
+            'course' => $validated['course'],
+            'email' => $validated['email'] ?? null,
+            'phone' => $validated['phone'] ?? null
+        ]);
+
+        return redirect('/dashboard')->with('success', 'Student profile created successfully!');
+    }
+
     /**
      * Display the specified resource.
      */
@@ -47,34 +60,79 @@ class StudentController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-        public function edit($id)
-        {
-            $student = Student::findOrFail($id);
-            return view('students.edit', compact('student'));
-        }
+    public function edit($id)
+    {
+        $student = Student::findOrFail($id);
+        return view('students.edit', compact('student'));
+    }
 
     /**
      * Update the specified resource in storage.
      */
-   public function update(Request $request, $id)
-{
-    $student = Student::findOrFail($id);
+    public function update(Request $request, $id)
+    {
+        $student = Student::findOrFail($id);
 
-    $student->update([
-        'name' => $request->name,
-        'student_number' => $request->student_number,
-        'course' => $request->course
-    ]);
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'student_number' => 'required|string|unique:students,student_number,' . $id,
+            'course' => 'required|string',
+            'email' => 'nullable|email',
+            'phone' => 'nullable|string'
+        ]);
 
-    return redirect('/students');
-}
+        $student->update([
+            'name' => $validated['name'],
+            'student_number' => $validated['student_number'],
+            'course' => $validated['course'],
+            'email' => $validated['email'] ?? null,
+            'phone' => $validated['phone'] ?? null
+        ]);
+
+        return redirect('/dashboard')->with('success', 'Student profile updated successfully!');
+    }
 
     /**
      * Remove the specified resource from storage.
      */
-        public function destroy($id)
-        {
-            Student::destroy($id);
-            return redirect('/students');
+    public function destroy($id)
+    {
+        Student::destroy($id);
+        return redirect('/students');
+    }
+
+    /**
+     * Get current user's student info (API endpoint)
+     */
+    public function getStudentInfo()
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Not authenticated'
+            ], 401);
         }
+
+        $student = Student::where('user_id', Auth::id())->first();
+
+        if (!$student) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Student record not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'student_number' => $student->student_number,
+                'course' => $student->course,
+                'year' => $student->course,
+                'email' => $student->email,
+                'phone' => $student->phone
+            ]
+        ]);
+    }
 }

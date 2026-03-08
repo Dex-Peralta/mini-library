@@ -6,13 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class BorrowItem extends Model
 {
-    public function borrow()
-{
-    return $this->belongsTo(Borrow::class);
-}
+    protected $fillable = [
+        'borrow_id',
+        'book_id'
+    ];
 
-public function book()
-{
-    return $this->belongsTo(Book::class);
-}
+    public function borrow()
+    {
+        return $this->belongsTo(Borrow::class);
+    }
+
+    public function book()
+    {
+        return $this->belongsTo(Book::class);
+    }
 }
