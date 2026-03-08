@@ -29,11 +29,13 @@ class AuthorController extends Controller
      */
     public function store(Request $request)
     {
-        Author::create([
-        'name' => $request->name
-    ]);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255'
+        ]);
 
-    return redirect('/authors');
+        Author::create($validated);
+
+        return redirect()->route('authors.index')->with('success', 'Author created successfully!');
     }
 
     /**
@@ -47,24 +49,34 @@ class AuthorController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit($id)
     {
-        //
+        $author = Author::findOrFail($id);
+        return view('authors.edit', compact('author'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $author = Author::findOrFail($id);
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255'
+        ]);
+
+        $author->update($validated);
+
+        return redirect()->route('authors.index')->with('success', 'Author updated successfully!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        Author::destroy($id);
+        return redirect()->route('authors.index')->with('success', 'Author deleted successfully!');
     }
 }

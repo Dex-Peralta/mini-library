@@ -8,7 +8,13 @@ class BorrowItem extends Model
 {
     protected $fillable = [
         'borrow_id',
-        'book_id'
+        'book_id',
+        'returned_at',
+        'fine'
+    ];
+
+    protected $casts = [
+        'returned_at' => 'datetime',
     ];
 
     public function borrow()

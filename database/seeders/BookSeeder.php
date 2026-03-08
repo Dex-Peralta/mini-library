@@ -212,7 +212,11 @@ class BookSeeder extends Seeder
             $authorNames = $bookData['authors'];
             unset($bookData['authors']);
 
-            $book = Book::firstOrCreate(
+            // Keep legacy and new inventory columns in sync.
+            $bookData['total_copies'] = $bookData['inventory_count'];
+            $bookData['available_copies'] = $bookData['inventory_count'];
+
+            $book = Book::updateOrCreate(
                 ['title' => $bookData['title']],
                 $bookData
             );

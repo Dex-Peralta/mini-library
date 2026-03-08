@@ -37,16 +37,9 @@ class StudentController extends Controller
             'phone' => 'nullable|string'
         ]);
 
-        Student::create([
-            'user_id' => Auth::id(),
-            'name' => $validated['name'],
-            'student_number' => $validated['student_number'],
-            'course' => $validated['course'],
-            'email' => $validated['email'] ?? null,
-            'phone' => $validated['phone'] ?? null
-        ]);
+        Student::create($validated);
 
-        return redirect('/dashboard')->with('success', 'Student profile created successfully!');
+        return redirect()->route('students.index')->with('success', 'Student created successfully!');
     }
 
     /**
@@ -81,15 +74,9 @@ class StudentController extends Controller
             'phone' => 'nullable|string'
         ]);
 
-        $student->update([
-            'name' => $validated['name'],
-            'student_number' => $validated['student_number'],
-            'course' => $validated['course'],
-            'email' => $validated['email'] ?? null,
-            'phone' => $validated['phone'] ?? null
-        ]);
+        $student->update($validated);
 
-        return redirect('/dashboard')->with('success', 'Student profile updated successfully!');
+        return redirect()->route('students.index')->with('success', 'Student updated successfully!');
     }
 
     /**
@@ -98,41 +85,26 @@ class StudentController extends Controller
     public function destroy($id)
     {
         Student::destroy($id);
-        return redirect('/students');
+        return redirect()->route('students.index')->with('success', 'Student deleted successfully!');
     }
 
     /**
-     * Get current user's student info (API endpoint)
+     * Get student info by ID (API endpoint)
      */
-    public function getStudentInfo()
+    public function getStudentInfo($studentId)
     {
-        if (!Auth::check()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Not authenticated'
-            ], 401);
-        }
-
-        $student = Student::where('user_id', Auth::id())->first();
+        $student = Student::find($studentId);
 
         if (!$student) {
             return response()->json([
                 'success' => false,
-                'message' => 'Student record not found'
+                'message' => 'Student not found'
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'id' => $student->id,
-                'name' => $student->name,
-                'student_number' => $student->student_number,
-                'course' => $student->course,
-                'year' => $student->course,
-                'email' => $student->email,
-                'phone' => $student->phone
-            ]
+            'student' => $student
         ]);
     }
 }

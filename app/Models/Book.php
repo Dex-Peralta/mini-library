@@ -8,11 +8,14 @@ class Book extends Model
 {
     protected $fillable = [
         'title',
-        'inventory_count',
         'description',
+        'isbn',
         'year_published',
         'genre',
-        'cover_image'
+        'publisher',
+        'total_copies',
+        'available_copies',
+        'inventory_count', // Keep for backward compatibility
     ];
 
     public function authors()
@@ -30,7 +33,7 @@ class Book extends Model
      */
     public function isAvailable()
     {
-        return $this->inventory_count > 0;
+        return $this->available_copies > 0;
     }
 
     /**
@@ -38,6 +41,33 @@ class Book extends Model
      */
     public function getStatus()
     {
-        return $this->isAvailable() ? 'Available' : 'Out of Stock';
+        if ($this->available_copies > 0) {
+            return 'Available (' . $this->available_copies . ' of ' . $this->total_copies . ')';
+        }
+        return 'Out of Stock';
+    }
+
+    /**
+     * Decrease available copies (when borrowed)
+     */
+    public function decreaseAvailability($quantity = 1)
+    {
+        if ($this->available_copies >= $quantity) {
+            $this->decrement('available_copies', $quantity);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Increase available copies (when returned)
+     */
+    public function increaseAvailability($quantity = 1)
+    {
+        if ($this->available_copies + $quantity <= $this->total_copies) {
+            $this->increment('available_copies', $quantity);
+            return true;
+        }
+        return false;
     }
 }
